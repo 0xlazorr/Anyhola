@@ -14,65 +14,29 @@
         body {
             font-family: 'Inter', sans-serif;
         }
-
         .loader {
             border-top-color: #3b82f6;
-            -webkit-animation: spin 1s linear infinite;
             animation: spin 1s linear infinite;
         }
-
         .platform-icon i {
             transition: color 0.3s ease-in-out, transform 0.2s ease-in-out;
         }
-
-        .fa-youtube {
-            color: #FF0000;
-        }
-
-        .fa-instagram {
-            color: #E4405F;
-        }
-
-        .fa-x-twitter {
-            color: #000000;
-        }
-
-        .fa-tiktok {
-            color: #000000;
-        }
-
-        /* Applies based on browser/OS theme */
+        .fa-youtube { color: #FF0000; }
+        .fa-instagram { color: #E4405F; }
+        .fa-x-twitter { color: #000000; }
+        .fa-tiktok { color: #000000; }
         @media (prefers-color-scheme: dark) {
-
-            .fa-x-twitter,
-            .fa-tiktok {
+            .fa-x-twitter, .fa-tiktok {
                 color: #FFFFFF;
             }
         }
-
         .platform-icon.active-platform i {
             color: #3b82f6 !important;
             transform: scale(1.1);
         }
-
-        @-webkit-keyframes spin {
-            0% {
-                -webkit-transform: rotate(0deg);
-            }
-
-            100% {
-                -webkit-transform: rotate(360deg);
-            }
-        }
-
         @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -149,7 +113,6 @@
         const platformIcons = document.querySelectorAll('.platform-icon');
         let selectedPlatform = null;
 
-        // --- Platform Selection ---
         platformIcons.forEach(button => {
             button.addEventListener('click', () => {
                 platformIcons.forEach(btn => btn.classList.remove('active-platform'));
@@ -160,10 +123,14 @@
             });
         });
 
-        // --- Form Submission ---
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const videoUrl = urlInput.value.trim();
+            
+            // This logic chooses the correct API URL for local dev or production
+            const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+            const apiUrl = isLocal ? 'http://127.0.0.1:5000/api/download' : '/api/download';
+
             resultDiv.classList.add('hidden');
             messageDiv.classList.add('hidden');
             if (!videoUrl) {
@@ -172,15 +139,16 @@
             }
             loader.classList.remove('hidden');
             try {
-                const response = await fetch('/api/download', {
+                const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ videoUrl: videoUrl }),
                 });
-                const data = await response.json();
                 if (!response.ok) {
-                    throw new Error(data.error || 'Something went wrong on the server.');
+                    const errorData = await response.json().catch(() => ({ error: 'An unknown server error occurred.' }));
+                    throw new Error(errorData.error);
                 }
+                const data = await response.json();
                 displayResults(data);
             } catch (error) {
                 showMessage(error.message);
@@ -189,7 +157,6 @@
             }
         });
 
-        // --- Utility Functions ---
         function showMessage(msg) {
             messageDiv.textContent = msg;
             messageDiv.classList.remove('hidden');
@@ -204,7 +171,6 @@
             return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
         }
 
-        // --- Display Results ---
         function displayResults(data) {
             thumbnail.src = data.thumbnail || 'https://placehold.co/160x90/1f2937/4b5563?text=No+Thumb';
             videoTitle.textContent = data.title;
@@ -236,5 +202,4 @@
         }
     </script>
 </body>
-
 </html>
