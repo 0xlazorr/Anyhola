@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anyhola - Download Videos Fast & Easy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+        integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .loader {
+            border-top-color: #3b82f6;
+            -webkit-animation: spin 1s linear infinite;
+            animation: spin 1s linear infinite;
+        }
+
+        .platform-icon i {
+            transition: color 0.3s ease-in-out, transform 0.2s ease-in-out;
+        }
+
+        .fa-youtube {
+            color: #FF0000;
+        }
+
+        .fa-instagram {
+            color: #E4405F;
+        }
+
+        .fa-x-twitter {
+            color: #000000;
+        }
+
+        .fa-tiktok {
+            color: #000000;
+        }
+
+        /* Applies based on browser/OS theme */
+        @media (prefers-color-scheme: dark) {
+
+            .fa-x-twitter,
+            .fa-tiktok {
+                color: #FFFFFF;
+            }
+        }
+
+        .platform-icon.active-platform i {
+            color: #3b82f6 !important;
+            transform: scale(1.1);
+        }
+
+        @-webkit-keyframes spin {
+            0% {
+                -webkit-transform: rotate(0deg);
+            }
+
+            100% {
+                -webkit-transform: rotate(360deg);
+            }
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body
+    class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-white flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-2xl mx-auto">
+        <div
+            class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl p-6 md:p-10 text-center mt-12">
+
+            <h1 class="text-3xl md:text-4xl font-bold mb-2">Anyhola 👋</h1>
+            <p class="text-gray-500 dark:text-gray-400 mb-8">Download videos from any of your favorite platforms,
+                hassle-free.</p>
+
+            <div class="flex justify-center space-x-6 mb-8 text-4xl">
+                <button class="platform-icon" data-platform="YouTube"><i class="fa-brands fa-youtube"></i></button>
+                <button class="platform-icon" data-platform="Twitter"><i class="fa-brands fa-x-twitter"></i></button>
+                <button class="platform-icon" data-platform="Instagram"><i class="fa-brands fa-instagram"></i></button>
+                <button class="platform-icon" data-platform="TikTok"><i class="fa-brands fa-tiktok"></i></button>
+            </div>
+
+            <form id="downloadForm">
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <input type="text" id="videoUrl" placeholder="Select a platform or paste any video link..."
+                        class="flex-grow p-4 bg-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 w-full placeholder-gray-500 dark:placeholder-gray-400">
+                    <button type="submit"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-lg transition duration-200 transform hover:scale-105">Download</button>
+                </div>
+            </form>
+
+            <div id="loader" class="hidden my-8">
+                <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-500 h-12 w-12 mx-auto">
+                </div>
+                <p class="mt-4 text-gray-500 dark:text-gray-400">Fetching video details...</p>
+            </div>
+
+            <div id="message"
+                class="hidden my-6 p-4 bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-500/30 rounded-lg">
+            </div>
+
+            <div id="result"
+                class="hidden mt-10 p-6 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-left">
+                <div class="flex flex-col md:flex-row gap-6">
+                    <img id="thumbnail" src="https://placehold.co/160x90/1f2937/4b5563?text=Video" alt="Video Thumbnail"
+                        class="w-full md:w-40 h-auto rounded-lg object-cover">
+                    <div class="flex-grow">
+                        <h3 id="videoTitle" class="text-lg font-semibold">Video Title Will Appear Here</h3>
+                        <p id="videoSource" class="text-sm text-gray-500 dark:text-gray-400 mb-4">Source: YouTube</p>
+                        <div id="downloadButtons" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-4">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="text-center mt-8">
+            <p class="text-gray-600 dark:text-gray-500 text-sm">&copy; <a href="https://lazorr.vercel.app">lazorr</a>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // DOM Elements
+        const form = document.getElementById('downloadForm');
+        const urlInput = document.getElementById('videoUrl');
+        const loader = document.getElementById('loader');
+        const resultDiv = document.getElementById('result');
+        const messageDiv = document.getElementById('message');
+        const thumbnail = document.getElementById('thumbnail');
+        const videoTitle = document.getElementById('videoTitle');
+        const videoSource = document.getElementById('videoSource');
+        const downloadButtonsContainer = document.getElementById('downloadButtons');
+        const platformIcons = document.querySelectorAll('.platform-icon');
+        let selectedPlatform = null;
+
+        // --- Platform Selection ---
+        platformIcons.forEach(button => {
+            button.addEventListener('click', () => {
+                platformIcons.forEach(btn => btn.classList.remove('active-platform'));
+                button.classList.add('active-platform');
+                selectedPlatform = button.dataset.platform;
+                urlInput.placeholder = `Paste ${selectedPlatform} video link here...`;
+                urlInput.focus();
+            });
+        });
+
+        // --- Form Submission ---
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const videoUrl = urlInput.value.trim();
+            resultDiv.classList.add('hidden');
+            messageDiv.classList.add('hidden');
+            if (!videoUrl) {
+                showMessage('Please paste a video URL.');
+                return;
+            }
+            loader.classList.remove('hidden');
+            try {
+                const response = await fetch('http://127.0.0.1:5000/api/download', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ videoUrl: videoUrl }),
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || 'Something went wrong on the server.');
+                }
+                displayResults(data);
+            } catch (error) {
+                showMessage(error.message);
+            } finally {
+                loader.classList.add('hidden');
+            }
+        });
+
+        // --- Utility Functions ---
+        function showMessage(msg) {
+            messageDiv.textContent = msg;
+            messageDiv.classList.remove('hidden');
+        }
+
+        function formatBytes(bytes, decimals = 2) {
+            if (!+bytes) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+        }
+
+        // --- Display Results ---
+        function displayResults(data) {
+            thumbnail.src = data.thumbnail || 'https://placehold.co/160x90/1f2937/4b5563?text=No+Thumb';
+            videoTitle.textContent = data.title;
+            videoSource.textContent = `Source: ${data.source}`;
+            downloadButtonsContainer.innerHTML = '';
+            if (!data.formats || data.formats.length === 0) {
+                showMessage("No downloadable formats found for this video.");
+                return;
+            }
+            data.formats.forEach(format => {
+                const button = document.createElement('a');
+                button.href = format.url;
+                button.target = '_blank';
+                let buttonText = `${format.ext}`;
+                if (format.resolution) {
+                    buttonText += ` - ${format.resolution}`;
+                } else if (format.format_note) {
+                    buttonText += ` (${format.format_note})`;
+                }
+                if (format.filesize) {
+                    buttonText += ` [${formatBytes(format.filesize)}]`;
+                }
+                button.textContent = buttonText;
+                button.className = 'bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition text-center text-sm block';
+                button.setAttribute('download', `${data.title}.${format.ext}`);
+                downloadButtonsContainer.appendChild(button);
+            });
+            resultDiv.classList.remove('hidden');
+        }
+    </script>
+</body>
+
+</html>
